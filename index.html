@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リサーチ資料ジェネレーター</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: #f7f7f5;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 32px 16px;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 24px;
+    color: #1a1a1a;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+  }
+
+  .sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: #888;
+    margin-left: 6px;
+  }
+
+  input[type="text"], textarea {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+    color: #1a1a1a;
+  }
+
+  input[type="text"]:focus, textarea:focus {
+    border-color: #666;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .hint {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+  }
+
+  button#generateBtn {
+    width: 100%;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.15s;
+    margin-top: 4px;
+  }
+
+  button#generateBtn:hover { background: #333; }
+  button#generateBtn:disabled { background: #aaa; cursor: not-allowed; }
+
+  #status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #888;
+    min-height: 20px;
+    text-align: center;
+  }
+
+  #output {
+    margin-top: 28px;
+    display: none;
+  }
+
+  .section-block {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .catch-text {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+  }
+
+  .body-text {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #333;
+    white-space: pre-wrap;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover {
+    background: #f0f0f0;
+    border-color: #aaa;
+  }
+
+  .copy-btn.copied {
+    color: #4a9;
+    border-color: #4a9;
+  }
+
+  #copyAllBtn {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.15s;
+    margin-top: 4px;
+  }
+
+  #copyAllBtn:hover {
+    background: #f5f5f5;
+    border-color: #aaa;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #e8e8e8;
+    margin: 24px 0;
+  }
+
+  .error-msg {
+    background: #fff5f5;
+    border: 1px solid #ffcccc;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #c00;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📋 リサーチ資料ジェネレーター</h1>
+
+  <div class="field">
+    <label>命令文・URL <span class="sub">必須</span></label>
+    <textarea id="instruction" rows="5" placeholder="例：「創始 麺屋武蔵」の情報をまとめて&#10;https://example.com/ramen&#10;&#10;URLは文章の中に混ぜてもOKです。"></textarea>
+    <div class="hint">URLを本文に混ぜてそのまま貼り付けてください。自動で認識します。</div>
+  </div>
+
+  <div class="field">
+    <label>補足テキスト <span class="sub">任意・URLが読めない場合などに貼り付け</span></label>
+    <textarea id="extraText" placeholder="記事の本文やメモなどを直接貼り付けてください。"></textarea>
+  </div>
+
+  <button id="generateBtn">資料を生成する</button>
+  <div id="status"></div>
+  <div id="errorMsg" style="display:none"></div>
+
+  <div id="output">
+    <hr class="divider">
+    <div class="section-block" id="block1">
+      <div class="section-label">① 総合キャッチ</div>
+      <div class="catch-text" id="catch1"></div>
+      <button class="copy-btn" onclick="copyBlock('block1')">コピー</button>
+    </div>
+
+    <div class="section-block" id="block2">
+      <div class="section-label">② 名物・看板メニュー</div>
+      <div class="catch-text" id="catch2"></div>
+      <div class="body-text" id="body2"></div>
+      <button class="copy-btn" onclick="copyBlock('block2')">コピー</button>
+    </div>
+
+    <div class="section-block" id="block3">
+      <div class="section-label">③ お店・施設のすごさ</div>
+      <div class="catch-text" id="catch3"></div>
+      <div class="body-text" id="body3"></div>
+      <button class="copy-btn" onclick="copyBlock('block3')">コピー</button>
+    </div>
+
+    <button id="copyAllBtn" onclick="copyAll()">📄 全文をまとめてコピー</button>
+  </div>
+</div>
+
+<script>
+function getUrls(text) {
+  const urlRegex = /https?:\/\/[^\s　）)」】\]]+/g;
+  return text.match(urlRegex) || [];
+}
+
+function stripUrls(text) {
+  return text.replace(/https?:\/\/[^\s　）)」】\]]+/g, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+
+async function generate() {
+  const rawInstruction = document.getElementById('instruction').value.trim();
+  const urls = getUrls(rawInstruction);
+  const instruction = stripUrls(rawInstruction);
+  const extraText = document.getElementById('extraText').value.trim();
+  const status = document.getElementById('status');
+  const errorDiv = document.getElementById('errorMsg');
+
+  errorDiv.style.display = 'none';
+  document.getElementById('output').style.display = 'none';
+
+  if (!instruction) {
+    errorDiv.innerHTML = '<div class="error-msg">命令文を入力してください。</div>';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('generateBtn').disabled = true;
+  status.textContent = 'URLを取得中...';
+
+  // URLのコンテンツ取得
+  let fetchedContent = '';
+  for (const url of urls) {
+    try {
+      status.textContent = `${url} を取得中...`;
+      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+      if (res.ok) {
+        const data = await res.json();
+        // HTMLからテキスト抽出
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+        // script/style削除
+        doc.querySelectorAll('script, style, nav, footer, header').forEach(el => el.remove());
+        const text = doc.body ? doc.body.innerText.replace(/\s+/g, ' ').trim().slice(0, 3000) : '';
+        if (text) fetchedContent += `\n\n【URL: ${url}】\n${text}`;
+      }
+    } catch(e) {
+      fetchedContent += `\n\n【URL: ${url} は取得できませんでした】`;
+    }
+  }
+
+  if (extraText) fetchedContent += `\n\n【補足テキスト】\n${extraText}`;
+
+  status.textContent = 'AIが資料を生成中...';
+
+  const systemPrompt = `あなたはテレビ番組制作のリサーチャーをサポートするアシスタントです。
+与えられた情報をもとに、以下の3つのセクションで構成されたリサーチ資料を作成してください。
+
+必ずJSON形式のみで返答し、それ以外のテキストは一切含めないでください。
+
+以下のJSON構造で返してください：
+{
+  "catch1": "①総合キャッチ（30文字以上50文字以内）",
+  "catch2": "②名物・看板メニューのキャッチ（30文字以上50文字以内）",
+  "body2": "②名物・看板メニューの説明（100文字以上500文字以内）",
+  "catch3": "③お店・施設のすごさのキャッチ（30文字以上50文字以内）",
+  "body3": "③お店・施設のすごさの説明（100文字以上500文字以内）"
+}
+
+各セクションの説明：
+①総合キャッチ：ここだけ読めばどんな商品・メニューがあってどんな人気店かひと目でわかる、引きのある文。
+②名物キャッチ＋説明：看板商品・人気商品に関する引きのあるキャッチと、その商品についての詳細情報。
+③すごさキャッチ＋説明：番組で特集したくなるような実績・評判・すごさを示すキャッチと詳細情報。
+
+文体は体言止めや断定的な表現を使い、テレビ番組のリサーチ資料らしい引きのある文章にしてください。`;
+
+  const userPrompt = `命令：${instruction}
+
+参考情報：${fetchedContent || '（URL・テキストなし）'}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content.map(i => i.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+
+    document.getElementById('catch1').textContent = result.catch1;
+    document.getElementById('catch2').textContent = result.catch2;
+    document.getElementById('body2').textContent = result.body2;
+    document.getElementById('catch3').textContent = result.catch3;
+    document.getElementById('body3').textContent = result.body3;
+
+    document.getElementById('output').style.display = 'block';
+    status.textContent = '';
+  } catch(e) {
+    errorDiv.innerHTML = `<div class="error-msg">生成中にエラーが発生しました。もう一度お試しください。<br><small>${e.message}</small></div>`;
+    errorDiv.style.display = 'block';
+    status.textContent = '';
+  }
+
+  document.getElementById('generateBtn').disabled = false;
+}
+
+function copyBlock(blockId) {
+  const block = document.getElementById(blockId);
+  const label = block.querySelector('.section-label').textContent;
+  const catch_ = block.querySelector('.catch-text') ? block.querySelector('.catch-text').textContent : '';
+  const body = block.querySelector('.body-text') ? block.querySelector('.body-text').textContent : '';
+  const text = body ? `${label}\n${catch_}\n${body}` : `${label}\n${catch_}`;
+  navigator.clipboard.writeText(text);
+  const btn = block.querySelector('.copy-btn');
+  btn.textContent = 'コピー済み';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 1500);
+}
+
+function copyAll() {
+  const c1 = document.getElementById('catch1').textContent;
+  const c2 = document.getElementById('catch2').textContent;
+  const b2 = document.getElementById('body2').textContent;
+  const c3 = document.getElementById('catch3').textContent;
+  const b3 = document.getElementById('body3').textContent;
+  const text = `① 総合キャッチ\n${c1}\n\n② 名物・看板メニュー\n${c2}\n${b2}\n\n③ お店・施設のすごさ\n${c3}\n${b3}`;
+  navigator.clipboard.writeText(text);
+  const btn = document.getElementById('copyAllBtn');
+  btn.textContent = '✅ コピーしました';
+  setTimeout(() => { btn.textContent = '📄 全文をまとめてコピー'; }, 1500);
+}
+</script>
+</body>
+</html>
