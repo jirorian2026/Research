@@ -1,1289 +1,303 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ニュース横断検索「みやぞう」</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css" />
-  <style>
-    /* ---- リセット & ベース ---- */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-      background: #f4f2ed;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 2.5rem 1rem;
-      color: #1a1a18;
-    }
-
-    /* ---- ラッパー ---- */
-    .wrap {
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 2rem 2rem 1.75rem;
-      width: 100%;
-      max-width: 620px;
-      border: 1px solid #d9d7ce;
-    }
-
-    /* ---- ヘッダー ---- */
-    .header {
-      margin-bottom: 1.75rem;
-      padding-bottom: 1.25rem;
-      border-bottom: 1px solid #e8e6df;
-    }
-
-    .header h1 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #1a1a18;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      letter-spacing: -0.02em;
-    }
-
-    .header h1 .ti {
-      font-size: 22px;
-      color: #C0392B;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      color: #888780;
-      margin-top: 5px;
-    }
-
-    /* ---- 必須・除外ワード ---- */
-    .extra-inputs {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 1.5rem;
-    }
-
-    .extra-group {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      border: 1.5px solid #d3d1c7;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.15s;
-    }
-
-    .extra-group:focus-within {
-      border-color: #C0392B;
-    }
-
-    .extra-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 0 12px;
-      height: 40px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      background: #f4f2ed;
-      color: #0f6e56;
-      border-right: 1.5px solid #d3d1c7;
-      letter-spacing: 0.02em;
-      flex-shrink: 0;
-    }
-
-    .extra-label .ti {
-      font-size: 13px;
-      background: #0f6e56;
-      color: #fff;
-      border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .extra-label.exclude {
-      color: #C0392B;
-    }
-
-    .extra-label.exclude .ti {
-      background: #C0392B;
-    }
-
-    .extra-group input[type="text"] {
-      flex: 1;
-      height: 40px;
-      border: none;
-      outline: none;
-      padding: 0 12px;
-      font-size: 13px;
-      font-family: inherit;
-      color: #1a1a18;
-      background: #fff;
-    }
-
-    .extra-group input[type="text"]::placeholder {
-      color: #c0beb6;
-    }
-
-    /* ---- 検索ボタン行 ---- */
-    .btn-search-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 1.5rem;
-    }
-
-    .btn-search-row .btn-primary {
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .btn-search-row .btn-google-all {
-      flex: 1;
-    }
-
-    /* ---- 検索バー ---- */
-    .search-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .search-row input {
-      flex: 1;
-      height: 42px;
-      border: 1.5px solid #d3d1c7;
-      border-radius: 8px;
-      padding: 0 14px;
-      font-size: 15px;
-      color: #1a1a18;
-      outline: none;
-      transition: border-color 0.15s;
-      font-family: inherit;
-      background: #fff;
-    }
-
-    .search-row input:focus {
-      border-color: #C0392B;
-    }
-
-    .search-row input::placeholder {
-      color: #b4b2a9;
-    }
-
-    /* ---- ボタン共通 ---- */
-    button {
-      height: 42px;
-      border-radius: 8px;
-      border: 1.5px solid #d3d1c7;
-      background: transparent;
-      font-size: 14px;
-      font-family: inherit;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 16px;
-      color: #444441;
-      transition: background 0.12s, border-color 0.12s, color 0.12s;
-    }
-
-    button:hover {
-      background: #f4f2ed;
-      border-color: #888780;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    /* ---- プライマリボタン ---- */
-    .btn-primary {
-      background: #C0392B !important;
-      border-color: #C0392B !important;
-      color: #ffffff !important;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .btn-primary:hover {
-      background: #a93226 !important;
-      border-color: #a93226 !important;
-    }
-
-    /* ---- セクションラベル ---- */
-    .section-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #888780;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 10px;
-    }
-
-    /* ---- サイト選択ヘッダー行 ---- */
-    .site-header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      gap: 8px;
-    }
-
-    .site-toggle-btns {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .btn-toggle-all {
-      height: 28px;
-      padding: 0 10px;
-      font-size: 12px;
-      border-radius: 20px;
-      border: 1.5px solid #d3d1c7;
-      background: #faf9f6;
-      color: #444441;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.12s;
-    }
-
-    .btn-toggle-all:hover {
-      border-color: #C0392B;
-      color: #C0392B;
-      background: #fdf3f2;
-    }
-
-    /* ---- サイトカード ---- */
-    .sites {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 1.25rem;
-    }
-
-    .site-card {
-      border: 1.5px solid #d3d1c7;
-      border-radius: 10px;
-      padding: 12px 14px;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-      user-select: none;
-      background: #faf9f6;
-    }
-
-    .site-card:hover {
-      border-color: #888780;
-    }
-
-    .site-card.active {
-      border-color: #C0392B;
-      background: #fdf3f2;
-    }
-
-    .site-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 5px;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #d3d1c7;
-      flex-shrink: 0;
-      transition: background 0.15s;
-    }
-
-    .site-card.active .dot {
-      background: #C0392B;
-    }
-
-    .site-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: #444441;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .site-card.active .site-name {
-      color: #C0392B;
-    }
-
-    .check-icon {
-      font-size: 15px;
-      color: #d3d1c7;
-      transition: color 0.15s;
-    }
-
-    .site-card.active .check-icon {
-      color: #C0392B;
-    }
-
-    .site-url {
-      font-size: 11px;
-      color: #b4b2a9;
-    }
-
-    /* ======================================
-       検索期間ブロック
-    ====================================== */
-    .filter-wrap {
-      border: 1.5px solid #d3d1c7;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 1.5rem;
-      transition: border-color 0.15s;
-    }
-
-    .filter-wrap.open {
-      border-color: #C0392B;
-    }
-
-    /* ---- 期間フィルター行（クリック可） ---- */
-    .filter-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #f4f2ed;
-      padding: 11px 14px;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.12s;
-    }
-
-    .filter-row:hover {
-      background: #ebe9e2;
-    }
-
-    .filter-wrap.open .filter-row {
-      background: #fdf3f2;
-      border-bottom: 1px solid #f5cdc9;
-    }
-
-    .filter-row .ti-calendar {
-      font-size: 16px;
-      color: #888780;
-    }
-
-    .filter-label {
-      font-size: 13px;
-      color: #888780;
-      white-space: nowrap;
-    }
-
-    .filter-val {
-      font-size: 13px;
-      font-weight: 600;
-      color: #1a1a18;
-      flex: 1;
-    }
-
-    .tag {
-      font-size: 11px;
-      background: #e6f7ef;
-      color: #0f6e56;
-      border-radius: 20px;
-      padding: 3px 10px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .tag.custom {
-      background: #fbeaea;
-      color: #a93226;
-    }
-
-    /* ---- 開閉シェブロン ---- */
-    .chevron {
-      font-size: 16px;
-      color: #888780;
-      transition: transform 0.2s ease;
-    }
-
-    .filter-wrap.open .chevron {
-      transform: rotate(180deg);
-      color: #C0392B;
-    }
-
-    /* ---- 展開パネル ---- */
-    .date-panel {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.25s ease, padding 0.2s ease;
-      background: #fff;
-      padding: 0 16px;
-    }
-
-    .filter-wrap.open .date-panel {
-      max-height: 200px;
-      padding: 14px 16px 16px;
-    }
-
-    .panel-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #b4b2a9;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 10px;
-    }
-
-    /* ---- プリセットボタン行 ---- */
-    .preset-row {
-      display: flex;
-      gap: 6px;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      margin-bottom: 0;
-      scrollbar-width: none;
-    }
-
-    .preset-row::-webkit-scrollbar {
-      display: none;
-    }
-
-    .preset-btn {
-      height: 30px;
-      padding: 0 10px;
-      font-size: 12px;
-      border-radius: 20px;
-      border: 1.5px solid #d3d1c7;
-      background: #faf9f6;
-      color: #444441;
-      font-weight: 500;
-      transition: all 0.12s;
-      white-space: nowrap;
-    }
-
-    .preset-btn:hover {
-      border-color: #C0392B;
-      color: #C0392B;
-      background: #fdf3f2;
-    }
-
-    .preset-btn.active {
-      background: #C0392B;
-      border-color: #C0392B;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .preset-btn.active:hover {
-      background: #a93226;
-    }
-
-    /* ---- カスタム日付入力 ---- */
-    .custom-row {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
-
-    .custom-row.show {
-      display: flex;
-    }
-
-    .date-input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-      min-width: 140px;
-    }
-
-    .date-input-group label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #888780;
-      letter-spacing: 0.04em;
-    }
-
-    .date-input-group input[type="date"] {
-      height: 36px;
-      border: 1.5px solid #d3d1c7;
-      border-radius: 8px;
-      padding: 0 10px;
-      font-size: 13px;
-      color: #1a1a18;
-      font-family: inherit;
-      outline: none;
-      background: #fff;
-      transition: border-color 0.15s;
-      width: 100%;
-    }
-
-    .date-input-group input[type="date"]:focus {
-      border-color: #C0392B;
-    }
-
-    .date-sep {
-      font-size: 16px;
-      color: #b4b2a9;
-      margin-top: 18px;
-      flex-shrink: 0;
-    }
-
-    /* ---- 個別検索ボタン群 ---- */
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 1.25rem;
-    }
-
-    .btn-row button {
-      flex: 1;
-      min-width: 140px;
-      font-size: 13px;
-      color: #444441;
-    }
-
-    /* ---- OR / AND ラベル ---- */
-    .or-label  { color: #1558b0; }
-    .and-label { color: #6b3fa0; }
-
-    .op-badge {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 1px 5px;
-      border-radius: 4px;
-      letter-spacing: 0.05em;
-    }
-
-    .or-badge  { background: #1558b0; color: #fff; }
-    .and-badge { background: #6b3fa0; color: #fff; }
-
-    .or-label  .ti, .and-label .ti { background: transparent; }
-
-    /* ---- サイト一括切替 ---- */
-    .sites-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .sites-header .section-label {
-      margin-bottom: 0;
-    }
-
-    .sites-toggle {
-      display: flex;
-      gap: 6px;
-    }
-
-    .toggle-btn {
-      height: 28px;
-      padding: 0 10px;
-      font-size: 12px;
-      border-radius: 6px;
-      border: 1px solid #d3d1c7;
-      background: #faf9f6;
-      color: #444441;
-      gap: 4px;
-    }
-
-    .toggle-btn:hover {
-      border-color: #888780;
-      background: #f0ede6;
-    }
-
-    /* ---- サイト指定検索ボタン ---- */
-    .btn-site-search {
-      width: 100%;
-      justify-content: center;
-      margin-bottom: 1.25rem;
-      font-size: 14px;
-    }
-
-    /* ---- Google全体検索 ---- */
-    .google-all-row {
-      margin-bottom: 0.75rem;
-    }
-
-    .btn-google-all {
-      width: 100%;
-      height: 42px;
-      border-radius: 8px;
-      border: 1.5px solid #C0392B;
-      background: #C0392B;
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: background 0.12s, border-color 0.12s;
-    }
-
-    .btn-google-all:hover {
-      background: #a93226;
-      border-color: #a93226;
-    }
-
-    /* ---- ヒント ---- */
-    .result-hint {
-      font-size: 13px;
-      color: #888780;
-      padding: 12px 14px;
-      border-top: 1px solid #e8e6df;
-      display: none;
-      align-items: center;
-      gap: 6px;
-      line-height: 1.5;
-    }
-
-    .result-hint.show {
-      display: flex;
-    }
-
-    .result-hint .ti {
-      font-size: 15px;
-      flex-shrink: 0;
-      color: #C0392B;
-    }
-
-    /* ---- レスポンシブ ---- */
-    @media (max-width: 480px) {
-      .sites {
-        grid-template-columns: 1fr;
-      }
-      .search-row {
-        flex-direction: column;
-      }
-      .search-row button {
-        width: 100%;
-        justify-content: center;
-      }
-      .preset-row {
-        gap: 6px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リサーチ資料ジェネレーター</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: #f7f7f5; color: #1a1a1a; min-height: 100vh; padding: 32px 16px;
+  }
+  h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 24px; }
+  .container { max-width: 720px; margin: 0 auto; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #444; }
+  .sub { font-size: 12px; font-weight: 400; color: #888; margin-left: 6px; }
+  textarea {
+    width: 100%; border: 1px solid #ddd; border-radius: 6px;
+    padding: 10px 12px; font-size: 14px; font-family: inherit;
+    background: #fff; outline: none; transition: border-color 0.15s;
+    color: #1a1a1a; resize: vertical;
+  }
+  textarea:focus { border-color: #666; }
+  .field { margin-bottom: 16px; }
+  .hint { font-size: 12px; color: #999; margin-top: 5px; }
+  button#generateBtn {
+    width: 100%; background: #1a1a1a; color: #fff; border: none;
+    border-radius: 6px; padding: 13px; font-size: 15px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.05em; transition: background 0.15s; margin-top: 4px;
+  }
+  button#generateBtn:hover { background: #333; }
+  button#generateBtn:disabled { background: #aaa; cursor: not-allowed; }
+  #status { margin-top: 12px; font-size: 13px; color: #888; min-height: 20px; text-align: center; }
+  #output { margin-top: 28px; display: none; }
+  .section-block {
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 18px 20px; margin-bottom: 16px; position: relative;
+  }
+  .section-label { font-size: 11px; font-weight: 700; color: #888; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .catch-text { font-size: 17px; font-weight: 700; line-height: 1.5; color: #1a1a1a; margin-bottom: 10px; }
+  .body-text { font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap; margin-bottom: 12px; }
+  .source-list { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+  .source-item { font-size: 12px; color: #666; margin-bottom: 4px; display: flex; align-items: baseline; gap: 6px; }
+  .source-badge {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
+    border-radius: 3px; white-space: nowrap; flex-shrink: 0;
+  }
+  .badge-news    { background: #e8f0fe; color: #1a5ccc; }
+  .badge-web     { background: #e8f5e9; color: #2a7a3a; }
+  .badge-blog    { background: #fff3e0; color: #b85c00; }
+  .badge-wiki    { background: #f3f3f3; color: #555; }
+  .source-date { font-size: 11px; color: #999; white-space: nowrap; flex-shrink: 0; }
+  .source-link { color: #555; word-break: break-all; }
+  .source-link:hover { color: #1a1a1a; }
+  .copy-btn {
+    position: absolute; top: 14px; right: 16px; background: none;
+    border: 1px solid #ccc; border-radius: 4px; padding: 4px 10px;
+    font-size: 12px; cursor: pointer; color: #666; transition: all 0.15s;
+  }
+  .copy-btn:hover { background: #f0f0f0; border-color: #aaa; }
+  .copy-btn.copied { color: #4a9; border-color: #4a9; }
+  #copyAllBtn {
+    width: 100%; background: #fff; border: 1px solid #ccc; border-radius: 6px;
+    padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer;
+    color: #555; transition: all 0.15s; margin-top: 4px;
+  }
+  #copyAllBtn:hover { background: #f5f5f5; border-color: #aaa; }
+  .divider { border: none; border-top: 1px solid #e8e8e8; margin: 24px 0; }
+  .error-msg {
+    background: #fff5f5; border: 1px solid #ffcccc; border-radius: 6px;
+    padding: 12px 16px; font-size: 13px; color: #c00; margin-top: 16px;
+  }
+</style>
 </head>
 <body>
+<div class="container">
+  <h1>📋 リサーチ資料ジェネレーター</h1>
 
-<div class="wrap">
-  <div class="header">
-    <h1>
-      <i class="ti ti-news" aria-label="ニュースアイコン"></i>
-      ニュース横断検索「みやぞう」
-    </h1>
-    <p class="subtitle">スポーツ・芸能ニュース検索ツール</p>
+  <div class="field">
+    <label>命令文・URL <span class="sub">必須</span></label>
+    <textarea id="instruction" rows="5" placeholder="例：「創始 麺屋武蔵」の情報をまとめて&#10;https://magazine.vacan.com/archives/featured-article/shinjuku&#10;&#10;URLは文章に混ぜてOKです。自動で認識します。"></textarea>
+    <div class="hint">URLを本文に混ぜてそのまま貼り付けてください。自動で認識します。</div>
   </div>
 
-  <div class="search-row">
-    <input type="text" id="kw" placeholder="キーワードを入力（例：大谷翔平　移籍）" />
+  <div class="field">
+    <label>補足テキスト <span class="sub">任意・記事本文などを直接貼り付け</span></label>
+    <textarea id="extraText" rows="4" placeholder="記事の本文やメモなどを直接貼り付けてください。"></textarea>
   </div>
 
+  <button id="generateBtn">資料を生成する</button>
+  <div id="status"></div>
+  <div id="errorMsg" style="display:none"></div>
 
-  <div class="extra-inputs">
-    <div class="extra-group">
-      <label class="extra-label" for="mustKw">
-        <i class="ti ti-plus"></i> 必須ワード
-      </label>
-      <input type="text" id="mustKw" placeholder="例：結婚　（スペース区切りでAND検索）" />
+  <div id="output">
+    <hr class="divider">
+    <div class="section-block" id="block1">
+      <div class="section-label">① 総合キャッチ</div>
+      <div class="catch-text" id="catch1"></div>
+      <div class="source-list" id="src1"></div>
+      <button class="copy-btn" onclick="copyBlock('block1')">コピー</button>
     </div>
-    <div class="extra-group">
-      <label class="extra-label exclude" for="excludeKw">
-        <i class="ti ti-minus"></i> 除外ワード
-      </label>
-      <input type="text" id="excludeKw" placeholder="例：スポンサー　CM　（スペース区切りで複数指定）" />
+    <div class="section-block" id="block2">
+      <div class="section-label">② 名物・看板メニュー</div>
+      <div class="catch-text" id="catch2"></div>
+      <div class="body-text" id="body2"></div>
+      <div class="source-list" id="src2"></div>
+      <button class="copy-btn" onclick="copyBlock('block2')">コピー</button>
     </div>
-    <div class="extra-group">
-      <label class="extra-label or-label" for="orKw">
-        <span class="op-badge or-badge">OR</span> OR検索
-      </label>
-      <input type="text" id="orKw" placeholder="例：優勝　受賞　（いずれかを含む記事）" />
+    <div class="section-block" id="block3">
+      <div class="section-label">③ お店・施設のすごさ</div>
+      <div class="catch-text" id="catch3"></div>
+      <div class="body-text" id="body3"></div>
+      <div class="source-list" id="src3"></div>
+      <button class="copy-btn" onclick="copyBlock('block3')">コピー</button>
     </div>
-    <div class="extra-group">
-      <label class="extra-label and-label" for="andKw">
-        <span class="op-badge and-badge">AND</span> AND検索
-      </label>
-      <input type="text" id="andKw" placeholder="例：監督　コメント　（すべてを含む記事）" />
-    </div>
-  </div>
-
-  <!-- 検索期間（クリックで展開） -->
-  <div class="filter-wrap" id="filterWrap">
-    <div class="filter-row" id="filterRow" onclick="toggleDatePanel()">
-      <i class="ti ti-calendar"></i>
-      <span class="filter-label">検索期間</span>
-      <span class="filter-val" id="dateRange"></span>
-      <span class="tag" id="presetTag">指定なし</span>
-      <i class="ti ti-chevron-down chevron" id="chevron"></i>
-    </div>
-
-    <!-- 展開パネル -->
-    <div class="date-panel" id="datePanel">
-      <p class="panel-label">期間のプリセット</p>
-      <div class="preset-row">
-        <button class="preset-btn active" data-years="all" onclick="selectPreset(this)">指定なし</button>
-        <button class="preset-btn" data-years="-1" onclick="selectPreset(this)">今年</button>
-        <button class="preset-btn" data-years="-2" onclick="selectPreset(this)">去年</button>
-        <button class="preset-btn" data-years="-3" onclick="selectPreset(this)">一昨年</button>
-        <button class="preset-btn" data-years="0" onclick="selectPreset(this)">
-          <i class="ti ti-pencil"></i> カスタム
-        </button>
-      </div>
-
-      <!-- カスタム日付入力（カスタム選択時のみ表示） -->
-      <div class="custom-row" id="customRow">
-        <div class="date-input-group">
-          <label for="dateFrom">開始日</label>
-          <input type="date" id="dateFrom" onchange="applyCustomDate()" />
-        </div>
-        <span class="date-sep"><i class="ti ti-arrow-right"></i></span>
-        <div class="date-input-group">
-          <label for="dateTo">終了日</label>
-          <input type="date" id="dateTo" onchange="applyCustomDate()" />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="btn-search-row">
-    <button class="btn-google-all" onclick="searchGoogle()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/>
-      </svg>
-      検索サイトを指定せずにGoogleで全体検索
-    </button>
-  </div>
-
-  <div class="sites-header">
-    <p class="section-label" style="margin-bottom:0">検索するサイト（クリックで切り替え）</p>
-    <div class="sites-toggle">
-      <button class="toggle-btn" onclick="toggleAllSites(true)"><i class="ti ti-circle-check"></i> すべて選択</button>
-      <button class="toggle-btn" onclick="toggleAllSites(false)"><i class="ti ti-circle-x"></i> すべて解除</button>
-    </div>
-  </div>
-  <div class="sites" id="siteGrid">
-    <div class="site-card" data-site="nikkansports.com/entertainment" data-label="日刊スポーツ" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">日刊スポーツ</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">nikkansports.com</div>
-    </div>
-    <div class="site-card" data-site="sponichi.co.jp" data-label="スポニチ" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">スポニチ</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">sponichi.co.jp</div>
-    </div>
-    <div class="site-card" data-site="daily.co.jp" data-label="デイリースポーツ" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">デイリースポーツ</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">daily.co.jp</div>
-    </div>
-    <div class="site-card" data-site="encount.press" data-label="エンカウント" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">エンカウント</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">encount.press</div>
-    </div>
-    <div class="site-card" data-site="mdpr.jp" data-label="モデルプレス" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">モデルプレス</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">mdpr.jp</div>
-    </div>
-    <div class="site-card" data-site="realsound.jp" data-label="リアルサウンド" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">リアルサウンド</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">realsound.jp</div>
-    </div>
-    <div class="site-card" data-site="hochi.news" data-label="スポーツ報知" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">スポーツ報知</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">hochi.news</div>
-    </div>
-    <div class="site-card" data-site="tokyo-sports.co.jp" data-label="東スポ" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">東スポ</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">tokyo-sports.co.jp</div>
-    </div>
-    <div class="site-card" data-site="oricon.co.jp" data-label="オリコンニュース" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">オリコンニュース</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">oricon.co.jp</div>
-    </div>
-    <div class="site-card" data-site="sanspo.com" data-label="サンスポ" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">サンスポ</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">sanspo.com</div>
-    </div>
-    <div class="site-card" data-site="news.livedoor.com" data-label="ライブドアニュース" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">ライブドアニュース</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">news.livedoor.com</div>
-    </div>
-    <div class="site-card" data-site="excite.co.jp" data-label="exciteニュース" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">exciteニュース</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">excite.co.jp</div>
-    </div>
-    <div class="site-card" data-site="news.mynavi.jp" data-label="マイナビニュース" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">マイナビニュース</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">news.mynavi.jp</div>
-    </div>
-    <div class="site-card" data-site="e-talentbank.co.jp" data-label="Eタレントバンク" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">Eタレントバンク</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">e-talentbank.co.jp</div>
-    </div>
-    <div class="site-card" data-site="news-postseven.com" data-label="NEWSポストセブン" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">NEWSポストセブン</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">news-postseven.com</div>
-    </div>
-    <div class="site-card" data-site="asagei.com" data-label="アサ芸プラス" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">アサ芸プラス</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">asagei.com</div>
-    </div>
-    <div class="site-card" data-site="jisin.jp" data-label="女性自身" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">女性自身</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">jisin.jp</div>
-    </div>
-    <div class="site-card" data-site="nikkan-gendai.com" data-label="日刊ゲンダイ" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">日刊ゲンダイ</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">nikkan-gendai.com</div>
-    </div>
-    <div class="site-card" data-site="jprime.jp" data-label="週刊女性PRIME" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">週刊女性PRIME</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">jprime.jp</div>
-    </div>
-    <div class="site-card" data-site="cyzowoman.com" data-label="サイゾーウーマン" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">サイゾーウーマン</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">cyzowoman.com</div>
-    </div>
-    <div class="site-card" data-site="rbbtoday.com" data-label="RBBTODAY" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">RBBTODAY</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">rbbtoday.com</div>
-    </div>
-    <div class="site-card" data-site="smart-flash.jp" data-label="SmartFLASH" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">SmartFLASH</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">smart-flash.jp</div>
-    </div>
-    <div class="site-card" data-site="natalie.mu/owarai" data-label="お笑いナタリー" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">お笑いナタリー</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">natalie.mu/owarai</div>
-    </div>
-    <div class="site-card" data-site="natalie.mu/music" data-label="音楽ナタリー" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">音楽ナタリー</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">natalie.mu/music</div>
-    </div>
-    <div class="site-card" data-site="magazine.fany.lol" data-label="FANYマガジン" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">FANYマガジン</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">magazine.fany.lol</div>
-    </div>
-    <div class="site-card" data-site="times.abema.tv" data-label="AbemaTIMES" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">AbemaTIMES</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">times.abema.tv</div>
-    </div>
-    <div class="site-card" data-site="j-cast.com" data-label="J-CASTニュース" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">J-CASTニュース</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">j-cast.com</div>
-    </div>
-    <div class="site-card" data-site="news.yahoo.co.jp" data-label="Yahoo!ニュース" onclick="toggleSite(this)">
-      <div class="site-header">
-        <div class="dot"></div>
-        <span class="site-name">Yahoo!ニュース</span>
-        <i class="ti ti-check check-icon"></i>
-      </div>
-      <div class="site-url">news.yahoo.co.jp</div>
-    </div>
-
-  </div>
-
-  <button class="btn-primary btn-site-search" onclick="searchAll()">
-    <i class="ti ti-search"></i> 検索サイトを指定して検索
-  </button>
-
-
-  <div class="result-hint" id="hint">
-    <i class="ti ti-external-link"></i>
-    Googleの検索結果が新しいタブで開きます。ポップアップをブロックしている場合は許可してください。
+    <button id="copyAllBtn" onclick="copyAll()">📄 全文をまとめてコピー</button>
   </div>
 </div>
 
 <script>
-  // ---- 日付ユーティリティ ----
-  function pad(n) {
-    return String(n).padStart(2, '0');
+function getUrls(text) {
+  const urlRegex = /https?:\/\/[^\s　）)」】\]]+/g;
+  return text.match(urlRegex) || [];
+}
+function stripUrls(text) {
+  return text.replace(/https?:\/\/[^\s　）)」】\]]+/g, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// 出典バッジ判定
+function classifySource(url) {
+  const newspapers = [
+    'nikkei.com','asahi.com','yomiuri.co.jp','mainichi.jp','sankei.com',
+    'nhk.or.jp','tbs.co.jp','ntv.co.jp','tv-asahi.co.jp','fujitv.co.jp',
+    'jiji.com','kyodo.co.jp','47news.jp','chunichi.co.jp','nishinippon.co.jp'
+  ];
+  const wiki = ['wikipedia.org'];
+  const blogHints = ['ameblo.jp','blog.','livedoor.','fc2.com','hatenablog','note.com','blogger.'];
+
+  if (newspapers.some(d => url.includes(d))) return { label: '新聞・TV', cls: 'badge-news' };
+  if (wiki.some(d => url.includes(d)))       return { label: 'Wikipedia', cls: 'badge-wiki' };
+  if (blogHints.some(d => url.includes(d)))  return { label: 'ブログ', cls: 'badge-blog' };
+  return { label: 'ネットニュース', cls: 'badge-web' };
+}
+
+function renderSources(containerId, sources) {
+  const el = document.getElementById(containerId);
+  if (!sources || sources.length === 0) { el.style.display = 'none'; return; }
+  el.innerHTML = sources.map(s => {
+    const { label, cls } = classifySource(s.url);
+    const dateStr = s.date ? `<span class="source-date">　${s.date}</span>` : '';
+    return `<div class="source-item">
+      <a class="source-link" href="${s.url}" target="_blank" rel="noopener">${s.title || s.url}</a>
+      <span class="source-badge ${cls}">${label}</span>${dateStr}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+
+async function generate() {
+  const rawInstruction = document.getElementById('instruction').value.trim();
+  const urls = getUrls(rawInstruction);
+  const instruction = stripUrls(rawInstruction);
+  const extraText = document.getElementById('extraText').value.trim();
+  const status = document.getElementById('status');
+  const errorDiv = document.getElementById('errorMsg');
+
+  errorDiv.style.display = 'none';
+  document.getElementById('output').style.display = 'none';
+
+  if (!rawInstruction) {
+    errorDiv.innerHTML = '<div class="error-msg">命令文を入力してください。</div>';
+    errorDiv.style.display = 'block';
+    return;
   }
 
-  function fmtJP(d) {
-    return d.getFullYear() + '年' + pad(d.getMonth() + 1) + '月' + pad(d.getDate()) + '日';
-  }
+  document.getElementById('generateBtn').disabled = true;
+  status.textContent = 'AIが情報を調査・生成中...（30秒ほどかかる場合があります）';
 
-  function fmtGoogle(d) {
-    return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
-  }
+  const urlList = urls.length > 0 ? '\n参考URL：\n' + urls.join('\n') : '';
+  const extraBlock = extraText ? '\n\n補足テキスト：\n' + extraText : '';
 
-  function fmtInput(d) {
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-  }
+  const systemPrompt = `あなたはテレビ番組制作のリサーチャーをサポートするアシスタントです。
+ユーザーが指定したお店・施設・商品について、ウェブ検索で情報を調査し、リサーチ資料を作成してください。
 
-  // ---- 現在の検索期間 ----
-  var today    = new Date();
-  var dateFrom = new Date(today);
-  var dateTo   = new Date(today);
-  dateFrom.setFullYear(today.getFullYear() - 3);
+出典の優先順位（高い順）：新聞・テレビ局サイト → ネットニュース → 個人ブログ → Wikipedia
+信頼度の高いソースを優先して使用し、各セクションで実際に参照したURLをsourcesに含めてください。
 
-  var isAllPeriod = true;
+【Wikipediaの利用ルール】
+- Wikipedia以外に情報源が全く見つからない場合に限り、最終手段として使用可。
+- WikipediaページがNHK・読売・朝日・毎日・日経などの新聞・テレビ局、または信頼性の高いニュースサイトを出典として明示している場合は、その情報を使ってよい（ただしsourcesにはWikipediaではなくその元の出典URLを記載すること）。
+- 上記以外でWikipediaを使った場合はsourcesのtitleに「※他に情報源なし」と明記すること。
 
-  function updateDisplay() {
-    document.getElementById('dateRange').textContent =
-      isAllPeriod ? '指定なし' : fmtJP(dateFrom) + '  〜  ' + fmtJP(dateTo);
-  }
+必ずJSON形式のみで返答してください。マークダウンのコードブロックや余分なテキストは絶対に含めないでください。
 
-  updateDisplay();
+返答形式：
+{
+  "catch1": "①総合キャッチ（30文字以上50文字以内）",
+  "catch2": "②名物キャッチ（30文字以上50文字以内）",
+  "body2": "②名物説明（100〜500文字）",
+  "sources2": [{"url": "https://...", "title": "サイト名や記事タイトル", "date": "YYYY.MM.DD"}],
+  "catch3": "③すごさキャッチ（30文字以上50文字以内）",
+  "body3": "③すごさ説明（100〜500文字）",
+  "sources3": [{"url": "https://...", "title": "サイト名や記事タイトル", "date": "YYYY.MM.DD"}],
+  "sources1": [{"url": "https://...", "title": "サイト名や記事タイトル", "date": "YYYY.MM.DD"}]
+}
 
-  // ---- 展開パネルの開閉 ----
-  function toggleDatePanel() {
-    document.getElementById('filterWrap').classList.toggle('open');
-  }
+sourcesは各セクションで実際に情報を参照したURLのみ含めてください（最大3件）。dateは記事の公開日をYYYY.MM.DD形式で記載し、日付が不明な場合は"date": ""としてください。
+文体は体言止めや断定的な表現を使い、テレビ番組のリサーチ資料らしい引きのある文章にしてください。`;
 
-  document.addEventListener('click', function(e) {
-    var wrap = document.getElementById('filterWrap');
-    if (!wrap.contains(e.target)) {
-      wrap.classList.remove('open');
+  const userPrompt = instruction + urlList + extraBlock;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        system: systemPrompt,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `HTTPエラー ${res.status}`);
     }
-  });
 
-  // ---- プリセット選択 ----
-  function selectPreset(btn) {
-    document.querySelectorAll('.preset-btn').forEach(function(b) {
-      b.classList.remove('active');
-    });
-    btn.classList.add('active');
+    const data = await res.json();
+    const text = data.content
+      .filter(i => i.type === 'text')
+      .map(i => i.text)
+      .join('');
 
-    var yearsRaw  = btn.dataset.years;
-    var years     = yearsRaw === 'all' ? 'all' : parseInt(yearsRaw, 10);
-    var customRow = document.getElementById('customRow');
-    var tag       = document.getElementById('presetTag');
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('JSONが見つかりませんでした');
+    const result = JSON.parse(jsonMatch[0]);
 
-    if (years === 'all') {
-      customRow.classList.remove('show');
-      tag.textContent = '指定なし';
-      tag.classList.remove('custom');
-      isAllPeriod = true;
-      updateDisplay();
-    } else if (years === -1) {
-      // 今年：1月1日〜今日
-      customRow.classList.remove('show');
-      tag.textContent = '今年';
-      tag.classList.remove('custom');
-      isAllPeriod = false;
-      dateFrom = new Date(today.getFullYear(), 0, 1);
-      dateTo   = new Date(today);
-      updateDisplay();
-    } else if (years === -2) {
-      // 去年：去年の1月1日〜12月31日
-      customRow.classList.remove('show');
-      tag.textContent = '去年';
-      tag.classList.remove('custom');
-      isAllPeriod = false;
-      dateFrom = new Date(today.getFullYear() - 1, 0, 1);
-      dateTo   = new Date(today.getFullYear() - 1, 11, 31);
-      updateDisplay();
-    } else if (years === -3) {
-      // 一昨年：一昨年の1月1日〜12月31日
-      customRow.classList.remove('show');
-      tag.textContent = '一昨年';
-      tag.classList.remove('custom');
-      isAllPeriod = false;
-      dateFrom = new Date(today.getFullYear() - 2, 0, 1);
-      dateTo   = new Date(today.getFullYear() - 2, 11, 31);
-      updateDisplay();
-    } else if (years === 0) {
-      customRow.classList.add('show');
-      tag.textContent = 'カスタム';
-      tag.classList.add('custom');
-      isAllPeriod = false;
-      document.getElementById('dateFrom').value = fmtInput(dateFrom);
-      document.getElementById('dateTo').value   = fmtInput(dateTo);
-    } else {
-      customRow.classList.remove('show');
-      tag.textContent = years + '年以内';
-      tag.classList.remove('custom');
-      isAllPeriod = false;
-      dateTo   = new Date(today);
-      dateFrom = new Date(today);
-      dateFrom.setFullYear(today.getFullYear() - years);
-      updateDisplay();
-    }
+    document.getElementById('catch1').textContent = result.catch1 || '';
+    document.getElementById('catch2').textContent = result.catch2 || '';
+    document.getElementById('body2').textContent = result.body2 || '';
+    document.getElementById('catch3').textContent = result.catch3 || '';
+    document.getElementById('body3').textContent = result.body3 || '';
+
+    renderSources('src1', result.sources1);
+    renderSources('src2', result.sources2);
+    renderSources('src3', result.sources3);
+
+    document.getElementById('output').style.display = 'block';
+    status.textContent = '';
+  } catch(e) {
+    errorDiv.innerHTML = `<div class="error-msg">生成中にエラーが発生しました。もう一度お試しください。<br><small>${e.message}</small></div>`;
+    errorDiv.style.display = 'block';
+    status.textContent = '';
   }
 
-  // ---- カスタム日付の適用 ----
-  function applyCustomDate() {
-    var fromVal = document.getElementById('dateFrom').value;
-    var toVal   = document.getElementById('dateTo').value;
-    if (fromVal) dateFrom = new Date(fromVal + 'T00:00:00');
-    if (toVal)   dateTo   = new Date(toVal   + 'T00:00:00');
-    if (dateFrom > dateTo) {
-      var tmp = dateFrom; dateFrom = dateTo; dateTo = tmp;
-      document.getElementById('dateFrom').value = fmtInput(dateFrom);
-      document.getElementById('dateTo').value   = fmtInput(dateTo);
-    }
-    updateDisplay();
-  }
+  document.getElementById('generateBtn').disabled = false;
+}
 
-  // ---- サイト一括ON/OFF ----
-  // ---- 全サイト一括ON/OFF ----
-  function toggleAllSites(on) {
-    document.querySelectorAll('.site-card').forEach(function(card) {
-      if (on) card.classList.add('active');
-      else card.classList.remove('active');
-    });
-  }
+function copyBlock(blockId) {
+  const block = document.getElementById(blockId);
+  const label = block.querySelector('.section-label').textContent;
+  const catch_ = block.querySelector('.catch-text')?.textContent || '';
+  const body = block.querySelector('.body-text')?.textContent || '';
+  const sources = [...block.querySelectorAll('.source-item')].map(el => {
+    const badge = el.querySelector('.source-badge')?.textContent || '';
+    const date = el.querySelector('.source-date')?.textContent || '';
+    const link = el.querySelector('.source-link');
+    const dateStr = date ? `　${date}` : '';
+    return `出典：${link?.textContent || ''}　[${badge}]${dateStr} ${link?.href || ''}`;
+  }).join('\n');
+  const parts = [label, catch_, body, sources].filter(Boolean);
+  navigator.clipboard.writeText(parts.join('\n'));
+  const btn = block.querySelector('.copy-btn');
+  btn.textContent = 'コピー済み';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 1500);
+}
 
-  // ---- サイトカードのON/OFF ----
-  function toggleSite(el) {
-    el.classList.toggle('active');
-  }
+function copyAll() {
+  const sections = ['block1','block2','block3'].map(id => {
+    const block = document.getElementById(id);
+    const label = block.querySelector('.section-label').textContent;
+    const catch_ = block.querySelector('.catch-text')?.textContent || '';
+    const body = block.querySelector('.body-text')?.textContent || '';
+    const sources = [...block.querySelectorAll('.source-item')].map(el => {
+      const badge = el.querySelector('.source-badge')?.textContent || '';
+      const link = el.querySelector('.source-link');
+      return `出典[${badge}]：${link?.textContent || ''} ${link?.href || ''}`;
+    }).join('\n');
+    return [label, catch_, body, sources].filter(Boolean).join('\n');
+  }).join('\n\n');
 
-  function getActiveSites() {
-    return [...document.querySelectorAll('.site-card.active')];
-  }
-
-  function rebuildSiteButtons() {
-    var active    = getActiveSites();
-    var container = document.getElementById('siteButtons');
-    container.innerHTML = '';
-    active.forEach(function(card) {
-      var btn = document.createElement('button');
-      btn.innerHTML = '<i class="ti ti-external-link"></i> ' + card.dataset.label + 'のみ';
-      btn.onclick   = function() { searchSingle(card.dataset.site); };
-      container.appendChild(btn);
-    });
-  }
-
-  // ---- 検索パーツ生成（共通）----
-  function buildParts() {
-    var mustRaw = document.getElementById('mustKw').value.trim();
-    var mustPart = mustRaw
-      ? mustRaw.split(/[\s　]+/).filter(Boolean).map(function(w){ return '"' + w + '"'; }).join(' ')
-      : '';
-
-    var excludeRaw = document.getElementById('excludeKw').value.trim();
-    var excludePart = excludeRaw
-      ? excludeRaw.split(/[\s　]+/).filter(Boolean).map(function(w){ return '-' + w; }).join(' ')
-      : '';
-
-    // OR検索：(word1 OR word2 OR word3)
-    var orRaw = document.getElementById('orKw').value.trim();
-    var orPart = orRaw
-      ? '(' + orRaw.split(/[\s　]+/).filter(Boolean).join(' OR ') + ')'
-      : '';
-
-    // AND検索：word1 word2 word3（スペース区切り＝Googleデフォルトのand）
-    var andRaw = document.getElementById('andKw').value.trim();
-    var andPart = andRaw
-      ? andRaw.split(/[\s　]+/).filter(Boolean).join(' ')
-      : '';
-
-    return { mustPart: mustPart, excludePart: excludePart, orPart: orPart, andPart: andPart };
-  }
-
-  // ---- Google検索URLの生成 ----
-  function buildSearchURL(sites, keyword) {
-    var siteQuery = sites.map(function(s) { return 'site:' + s; }).join(' OR ');
-    var p = buildParts();
-
-    var fullQuery = (p.mustPart   ? p.mustPart + ' '   : '')
-      + keyword
-      + (p.andPart   ? ' ' + p.andPart   : '')
-      + (p.orPart    ? ' ' + p.orPart    : '')
-      + (p.excludePart ? ' ' + p.excludePart : '')
-      + ' (' + siteQuery + ')';
-
-    var dateTbs = 'cdr:1,cd_min:' + fmtGoogle(dateFrom) + ',cd_max:' + fmtGoogle(dateTo);
-    return 'https://www.google.com/search'
-      + '?q='   + encodeURIComponent(fullQuery)
-      + (isAllPeriod ? '' : '&tbs=' + encodeURIComponent(dateTbs))
-      + '&lr=lang_ja&hl=ja';
-  }
-
-  // ---- Google全体検索（site:制限なし）----
-  function searchGoogle() {
-    var kw       = document.getElementById('kw').value.trim();
-    var mustChk  = document.getElementById('mustKw').value.trim();
-    var orChk2   = document.getElementById('orKw').value.trim();
-    var andChk2  = document.getElementById('andKw').value.trim();
-    if (!kw && !mustChk && !orChk2 && !andChk2) { alert('いずれかの検索欄を入力してください'); return; }
-
-    var p = buildParts();
-    var fullQuery = (p.mustPart   ? p.mustPart + ' '   : '')
-      + kw
-      + (p.andPart   ? ' ' + p.andPart   : '')
-      + (p.orPart    ? ' ' + p.orPart    : '')
-      + (p.excludePart ? ' ' + p.excludePart : '');
-
-    var dateTbs = 'cdr:1,cd_min:' + fmtGoogle(dateFrom) + ',cd_max:' + fmtGoogle(dateTo);
-    var url = 'https://www.google.com/search'
-      + '?q='   + encodeURIComponent(fullQuery)
-      + (isAllPeriod ? '' : '&tbs=' + encodeURIComponent(dateTbs))
-      + '&lr=lang_ja&hl=ja';
-
-    window.open(url, '_blank');
-    document.getElementById('hint').classList.add('show');
-    document.getElementById('filterWrap').classList.remove('open');
-  }
-
-  // ---- 一括検索 ----
-  function searchAll() {
-    var kw     = document.getElementById('kw').value.trim();
-    var mustChk = document.getElementById('mustKw').value.trim();
-    var orChk   = document.getElementById('orKw').value.trim();
-    var andChk  = document.getElementById('andKw').value.trim();
-    if (!kw && !mustChk && !orChk && !andChk) { alert('いずれかの検索欄を入力してください'); return; }
-    var active = getActiveSites();
-    if (active.length === 0) { alert('サイトを1つ以上選択してください'); return; }
-    window.open(buildSearchURL(active.map(function(c) { return c.dataset.site; }), kw), '_blank');
-    document.getElementById('hint').classList.add('show');
-    document.getElementById('filterWrap').classList.remove('open');
-  }
-
-  // ---- 個別検索 ----
-  function searchSingle(site) {
-    var kw = document.getElementById('kw').value.trim();
-    var mustChk2 = document.getElementById('mustKw').value.trim();
-    var orChk3   = document.getElementById('orKw').value.trim();
-    var andChk3  = document.getElementById('andKw').value.trim();
-    if (!kw && !mustChk2 && !orChk3 && !andChk3) { alert('いずれかの検索欄を入力してください'); return; }
-    window.open(buildSearchURL([site], kw), '_blank');
-    document.getElementById('hint').classList.add('show');
-    document.getElementById('filterWrap').classList.remove('open');
-  }
-
-  // ---- Enterキーで全体検索（全入力欄共通）----
-  ['kw', 'mustKw', 'excludeKw', 'orKw', 'andKw'].forEach(function(id) {
-    document.getElementById(id).addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') searchGoogle();
-    });
-  });
-
+  navigator.clipboard.writeText(sections);
+  const btn = document.getElementById('copyAllBtn');
+  btn.textContent = '✅ コピーしました';
+  setTimeout(() => { btn.textContent = '📄 全文をまとめてコピー'; }, 1500);
+}
 </script>
-
 </body>
 </html>
