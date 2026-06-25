@@ -32,26 +32,57 @@
   button#generateBtn:disabled { background: #aaa; cursor: not-allowed; }
   #status { margin-top: 12px; font-size: 13px; color: #888; min-height: 20px; text-align: center; }
   #output { margin-top: 28px; display: none; }
+
   .section-block {
     background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
     padding: 18px 20px; margin-bottom: 16px; position: relative;
   }
   .section-label { font-size: 11px; font-weight: 700; color: #888; letter-spacing: 0.1em; margin-bottom: 10px; }
-  .catch-text { font-size: 17px; font-weight: 700; line-height: 1.5; color: #1a1a1a; margin-bottom: 10px; }
-  .body-text { font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap; margin-bottom: 12px; }
+
+  /* ホバーハイライト */
+  .catch-text, .body-text {
+    border-radius: 4px;
+    transition: background 0.15s;
+    cursor: default;
+  }
+  .catch-text { font-size: 17px; font-weight: 700; line-height: 1.5; color: #1a1a1a; margin-bottom: 10px; padding: 4px 6px; }
+  .body-text { font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap; margin-bottom: 12px; padding: 4px 6px; }
+  .catch-text:hover, .body-text:hover { background: #fffbea; }
+
+  /* ホバー時の出典ポップアップ */
+  .text-wrapper { position: relative; }
+  .source-tooltip {
+    display: none;
+    position: absolute;
+    left: 0; top: 100%;
+    background: #1a1a1a; color: #fff;
+    font-size: 11px; line-height: 1.6;
+    padding: 8px 12px; border-radius: 6px;
+    z-index: 10; min-width: 260px; max-width: 480px;
+    white-space: normal; pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .source-tooltip::before {
+    content: ''; position: absolute; top: -5px; left: 16px;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-bottom: 5px solid #1a1a1a;
+  }
+  .text-wrapper:hover .source-tooltip { display: block; }
+
   .source-list { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
-  .source-item { font-size: 12px; color: #666; margin-bottom: 4px; display: flex; align-items: baseline; gap: 6px; }
+  .source-item { font-size: 12px; color: #666; margin-bottom: 4px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
   .source-badge {
     display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
     border-radius: 3px; white-space: nowrap; flex-shrink: 0;
   }
-  .badge-news    { background: #e8f0fe; color: #1a5ccc; }
-  .badge-web     { background: #e8f5e9; color: #2a7a3a; }
-  .badge-blog    { background: #fff3e0; color: #b85c00; }
-  .badge-wiki    { background: #f3f3f3; color: #555; }
+  .badge-news { background: #e8f0fe; color: #1a5ccc; }
+  .badge-web  { background: #e8f5e9; color: #2a7a3a; }
+  .badge-blog { background: #fff3e0; color: #b85c00; }
+  .badge-wiki { background: #f3f3f3; color: #555; }
   .source-date { font-size: 11px; color: #999; white-space: nowrap; flex-shrink: 0; }
   .source-link { color: #555; word-break: break-all; }
   .source-link:hover { color: #1a1a1a; }
+
   .copy-btn {
     position: absolute; top: 14px; right: 16px; background: none;
     border: 1px solid #ccc; border-radius: 4px; padding: 4px 10px;
@@ -93,26 +124,42 @@
 
   <div id="output">
     <hr class="divider">
+
+    <!-- ① 総合キャッチ -->
     <div class="section-block" id="block1">
       <div class="section-label">① 総合キャッチ</div>
-      <div class="catch-text" id="catch1"></div>
+      <div class="text-wrapper">
+        <div class="catch-text" id="catch1"></div>
+        <div class="source-tooltip" id="tip1"></div>
+      </div>
       <div class="source-list" id="src1"></div>
       <button class="copy-btn" onclick="copyBlock('block1')">コピー</button>
     </div>
+
+    <!-- ② 名物 -->
     <div class="section-block" id="block2">
       <div class="section-label">② 名物・看板メニュー</div>
-      <div class="catch-text" id="catch2"></div>
-      <div class="body-text" id="body2"></div>
+      <div class="text-wrapper">
+        <div class="catch-text" id="catch2"></div>
+        <div class="body-text" id="body2"></div>
+        <div class="source-tooltip" id="tip2"></div>
+      </div>
       <div class="source-list" id="src2"></div>
       <button class="copy-btn" onclick="copyBlock('block2')">コピー</button>
     </div>
+
+    <!-- ③ すごさ -->
     <div class="section-block" id="block3">
       <div class="section-label">③ お店・施設のすごさ</div>
-      <div class="catch-text" id="catch3"></div>
-      <div class="body-text" id="body3"></div>
+      <div class="text-wrapper">
+        <div class="catch-text" id="catch3"></div>
+        <div class="body-text" id="body3"></div>
+        <div class="source-tooltip" id="tip3"></div>
+      </div>
       <div class="source-list" id="src3"></div>
       <button class="copy-btn" onclick="copyBlock('block3')">コピー</button>
     </div>
+
     <button id="copyAllBtn" onclick="copyAll()">📄 全文をまとめてコピー</button>
   </div>
 </div>
@@ -126,25 +173,37 @@ function stripUrls(text) {
   return text.replace(/https?:\/\/[^\s　）)」】\]]+/g, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
-// 出典バッジ判定
 function classifySource(url) {
-  const newspapers = [
-    'nikkei.com','asahi.com','yomiuri.co.jp','mainichi.jp','sankei.com',
+  const newspapers = ['nikkei.com','asahi.com','yomiuri.co.jp','mainichi.jp','sankei.com',
     'nhk.or.jp','tbs.co.jp','ntv.co.jp','tv-asahi.co.jp','fujitv.co.jp',
-    'jiji.com','kyodo.co.jp','47news.jp','chunichi.co.jp','nishinippon.co.jp'
-  ];
+    'jiji.com','kyodo.co.jp','47news.jp','chunichi.co.jp','nishinippon.co.jp'];
   const wiki = ['wikipedia.org'];
   const blogHints = ['ameblo.jp','blog.','livedoor.','fc2.com','hatenablog','note.com','blogger.'];
-
   if (newspapers.some(d => url.includes(d))) return { label: '新聞・TV', cls: 'badge-news' };
   if (wiki.some(d => url.includes(d)))       return { label: 'Wikipedia', cls: 'badge-wiki' };
   if (blogHints.some(d => url.includes(d)))  return { label: 'ブログ', cls: 'badge-blog' };
   return { label: 'ネットニュース', cls: 'badge-web' };
 }
 
-function renderSources(containerId, sources) {
+function buildTooltipHTML(sources) {
+  if (!sources || sources.length === 0) return '';
+  return '📎 出典：<br>' + sources.map(s => {
+    const date = s.date ? `　${s.date}` : '';
+    return `・${s.title || s.url}${date}`;
+  }).join('<br>');
+}
+
+function renderSources(containerId, tipId, sources) {
   const el = document.getElementById(containerId);
-  if (!sources || sources.length === 0) { el.style.display = 'none'; return; }
+  const tip = document.getElementById(tipId);
+
+  if (!sources || sources.length === 0) {
+    el.style.display = 'none';
+    if (tip) tip.innerHTML = '';
+    return;
+  }
+
+  // 出典リスト表示
   el.innerHTML = sources.map(s => {
     const { label, cls } = classifySource(s.url);
     const dateStr = s.date ? `<span class="source-date">　${s.date}</span>` : '';
@@ -153,6 +212,9 @@ function renderSources(containerId, sources) {
       <span class="source-badge ${cls}">${label}</span>${dateStr}
     </div>`;
   }).join('');
+
+  // ツールチップ
+  if (tip) tip.innerHTML = buildTooltipHTML(sources);
 }
 
 document.getElementById('generateBtn').addEventListener('click', generate);
@@ -194,18 +256,9 @@ async function generate() {
 必ずJSON形式のみで返答してください。マークダウンのコードブロックや余分なテキストは絶対に含めないでください。
 
 返答形式：
-{
-  "catch1": "①総合キャッチ（30文字以上50文字以内）",
-  "catch2": "②名物キャッチ（30文字以上50文字以内）",
-  "body2": "②名物説明（100〜500文字）",
-  "sources2": [{"url": "https://...", "title": "サイト名や記事タイトル", "date": "YYYY.MM.DD"}],
-  "catch3": "③すごさキャッチ（30文字以上50文字以内）",
-  "body3": "③すごさ説明（100〜500文字）",
-  "sources3": [{"url": "https://...", "title": "サイト名や記事タイトル", "date": "YYYY.MM.DD"}],
-  "sources1": [{"url": "https://...", "title": "サイト名や記事タイトル", "date": "YYYY.MM.DD"}]
-}
+{"catch1":"①総合キャッチ（30文字以上50文字以内）","catch2":"②名物キャッチ（30文字以上50文字以内）","body2":"②名物説明（100〜500文字）","sources2":[{"url":"https://...","title":"サイト名や記事タイトル","date":"YYYY.MM.DD"}],"catch3":"③すごさキャッチ（30文字以上50文字以内）","body3":"③すごさ説明（100〜500文字）","sources3":[{"url":"https://...","title":"サイト名や記事タイトル","date":"YYYY.MM.DD"}],"sources1":[{"url":"https://...","title":"サイト名や記事タイトル","date":"YYYY.MM.DD"}]}
 
-sourcesは各セクションで実際に情報を参照したURLのみ含めてください（最大3件）。dateは記事の公開日をYYYY.MM.DD形式で記載し、日付が不明な場合は"date": ""としてください。
+sourcesは各セクションで実際に情報を参照したURLのみ含めてください（最大3件）。dateは記事の公開日をYYYY.MM.DD形式で記載し、日付が不明な場合は"date":""としてください。
 文体は体言止めや断定的な表現を使い、テレビ番組のリサーチ資料らしい引きのある文章にしてください。`;
 
   const userPrompt = instruction + urlList + extraBlock;
@@ -244,9 +297,9 @@ sourcesは各セクションで実際に情報を参照したURLのみ含めて�
     document.getElementById('catch3').textContent = result.catch3 || '';
     document.getElementById('body3').textContent = result.body3 || '';
 
-    renderSources('src1', result.sources1);
-    renderSources('src2', result.sources2);
-    renderSources('src3', result.sources3);
+    renderSources('src1', 'tip1', result.sources1);
+    renderSources('src2', 'tip2', result.sources2);
+    renderSources('src3', 'tip3', result.sources3);
 
     document.getElementById('output').style.display = 'block';
     status.textContent = '';
@@ -259,20 +312,23 @@ sourcesは各セクションで実際に情報を参照したURLのみ含めて�
   document.getElementById('generateBtn').disabled = false;
 }
 
+function getSourceText(block) {
+  return [...block.querySelectorAll('.source-item')].map(el => {
+    const badge = el.querySelector('.source-badge')?.textContent || '';
+    const date = el.querySelector('.source-date')?.textContent?.trim() || '';
+    const link = el.querySelector('.source-link');
+    const dateStr = date ? `　${date}` : '';
+    return `出典：${link?.textContent || ''}　${badge}${dateStr}\n${link?.href || ''}`;
+  }).join('\n');
+}
+
 function copyBlock(blockId) {
   const block = document.getElementById(blockId);
   const label = block.querySelector('.section-label').textContent;
   const catch_ = block.querySelector('.catch-text')?.textContent || '';
   const body = block.querySelector('.body-text')?.textContent || '';
-  const sources = [...block.querySelectorAll('.source-item')].map(el => {
-    const badge = el.querySelector('.source-badge')?.textContent || '';
-    const date = el.querySelector('.source-date')?.textContent || '';
-    const link = el.querySelector('.source-link');
-    const dateStr = date ? `　${date}` : '';
-    return `出典：${link?.textContent || ''}　[${badge}]${dateStr} ${link?.href || ''}`;
-  }).join('\n');
-  const parts = [label, catch_, body, sources].filter(Boolean);
-  navigator.clipboard.writeText(parts.join('\n'));
+  const sources = getSourceText(block);
+  navigator.clipboard.writeText([label, catch_, body, sources].filter(Boolean).join('\n'));
   const btn = block.querySelector('.copy-btn');
   btn.textContent = 'コピー済み';
   btn.classList.add('copied');
@@ -280,20 +336,15 @@ function copyBlock(blockId) {
 }
 
 function copyAll() {
-  const sections = ['block1','block2','block3'].map(id => {
+  const text = ['block1','block2','block3'].map(id => {
     const block = document.getElementById(id);
     const label = block.querySelector('.section-label').textContent;
     const catch_ = block.querySelector('.catch-text')?.textContent || '';
     const body = block.querySelector('.body-text')?.textContent || '';
-    const sources = [...block.querySelectorAll('.source-item')].map(el => {
-      const badge = el.querySelector('.source-badge')?.textContent || '';
-      const link = el.querySelector('.source-link');
-      return `出典[${badge}]：${link?.textContent || ''} ${link?.href || ''}`;
-    }).join('\n');
+    const sources = getSourceText(block);
     return [label, catch_, body, sources].filter(Boolean).join('\n');
   }).join('\n\n');
-
-  navigator.clipboard.writeText(sections);
+  navigator.clipboard.writeText(text);
   const btn = document.getElementById('copyAllBtn');
   btn.textContent = '✅ コピーしました';
   setTimeout(() => { btn.textContent = '📄 全文をまとめてコピー'; }, 1500);
